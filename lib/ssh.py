@@ -1,5 +1,6 @@
 from io import StringIO
 from time import sleep
+from timeit import default_timer
 from fabric import Connection
 from paramiko import RSAKey
 from paramiko.ssh_exception import NoValidConnectionsError
@@ -10,7 +11,7 @@ class SSH():
     SSH context manager for creating an SSH connection.
 
     On enter an SSH connection is attempted every 5 seconds until successful.
-    An exception is raised after 60 attempts.
+    An exception is raised after 5 minutes.
 
     On exit the connection is closed.
 
@@ -26,7 +27,6 @@ class SSH():
         self.host = host
         self.user = user
         self.private_key = RSAKey.from_private_key(StringIO(private_key))
-        self.wait_count = 0
 
     def __enter__(self):
         self.connection = Connection(
@@ -35,20 +35,21 @@ class SSH():
             connect_kwargs={'pkey': self.private_key},
         )
         print(f'Waiting for SSH to become available on {self.host}...')
-        self.wait_for_ssh()
+        self.wait_for_ssh(default_timer())
         return self.connection
 
     def __exit__(self, type, value, traceback):
         print(f'Closing SSH connection to {self.host}...')
         self.connection.close()
 
-    def wait_for_ssh(self):
-        self.wait_count += 1
+    def wait_for_ssh(self, start):
         try:
             self.connection.open()
         except NoValidConnectionsError:
-            if self.wait_count >= 60:
+            # Error after 5 minutes. Otherwise retry.
+            now = default_timer()
+            if now - start > 300:
                 raise
 
             sleep(5)
-            self.wait_for_ssh()
+            self.wait_for_ssh(start)
