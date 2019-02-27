@@ -22,7 +22,7 @@ These variables can be [passed into the Docker run](https://docs.docker.com/engi
 ```sh
 $ cp .env.sample .env # Fill out .env file
 $ docker pull surfline/run-on-ec2
-$ docker run --rm -it --env-file=.env run-on-ec2 echo \"hello world\"
+$ docker run --rm -it --env-file=.env surfline/run-on-ec2 echo \"hello world\"
 
 Creating key pair run-on-ec2-eb5f9910-1635-40e1-b120-0e08b06a60ce...
 Launching instance run-on-ec2-eb5f9910-1635-40e1-b120-0e08b06a60ce...
