@@ -24,4 +24,4 @@ if __name__ == '__main__':
 
         escaped_command = command.replace('"', '\\"')
         print(f'Running command "{escaped_command}" on {host}...')
-        connection.run(f'exec $SHELL -l -c "{escaped_command}"')
+        connection.run(f'exec $SHELL -l -c \'{escaped_command}\'')
