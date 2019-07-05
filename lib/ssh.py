@@ -1,6 +1,7 @@
 from io import StringIO
 from time import sleep
 from timeit import default_timer
+
 from fabric import Connection
 from paramiko import RSAKey
 from paramiko.ssh_exception import NoValidConnectionsError
@@ -23,7 +24,7 @@ class SSH():
     :type private: str
     """
 
-    def __init__(self, host, user, private_key):
+    def __init__(self, host: str, user: str, private_key):
         self.host = host
         self.user = user
         self.private_key = RSAKey.from_private_key(StringIO(private_key))

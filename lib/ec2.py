@@ -1,4 +1,5 @@
 import sys
+
 import boto3
 
 EC2_CLIENT = boto3.client('ec2')
@@ -13,22 +14,22 @@ class TempKeyPair:
 
     On exit the Key Pair is deleted.
 
-    :param name: Name of Key Pair to create.
-    :type name: str
+    :param key_name: Name of Key Pair to create.
+    :type key_name: str
     """
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, key_name: str):
+        self.key_name = key_name
 
     def __enter__(self):
-        print(f'Creating key pair {self.name}...')
-        key_pair = EC2_CLIENT.create_key_pair(KeyName=self.name)
+        print(f'Creating key pair {self.key_name}...')
+        key_pair = EC2_CLIENT.create_key_pair(KeyName=self.key_name)
         pem = key_pair['KeyMaterial']
         return pem
 
     def __exit__(self, type, value, traceback):
-        print(f'Deleting key pair {self.name}...')
-        EC2_CLIENT.delete_key_pair(KeyName=self.name)
+        print(f'Deleting key pair {self.key_name}...')
+        EC2_CLIENT.delete_key_pair(KeyName=self.key_name)
 
 
 class TempInstance():
@@ -42,22 +43,30 @@ class TempInstance():
 
     :param name: Name to tag Instance with.
     :type name: str
-    :param launch_template_name: Name of launch template to launch Instance with.
+    :param launch_template_name: Name of launch template to launch Instance
+        with.
     :type launch_template_name: str
     :param subnet_id: ID for subnet to launch Instance in.
     :type subnet_id: str
     """
 
-    def __init__(self, name, launch_template_name, subnet_id):
+    def __init__(
+        self,
+        name: str,
+        launch_template_name: str,
+        key_name: str,
+        subnet_id: str,
+    ):
         self.name = name
         self.launch_template_name = launch_template_name
+        self.key_name = key_name
         self.subnet_id = subnet_id
 
     def __enter__(self):
         print(f'Launching instance {self.name}...')
         self.instance = EC2_RESOURCE.create_instances(
             LaunchTemplate={'LaunchTemplateName': self.launch_template_name},
-            KeyName=self.name,
+            KeyName=self.key_name,
             MinCount=1,
             MaxCount=1,
             SubnetId=self.subnet_id,
@@ -73,6 +82,8 @@ class TempInstance():
                 },
             ],
         )[0]
+        print(f'Waiting for instance {self.instance.instance_id} to be '
+              'ready...')
 
         try:
             self.instance.wait_until_running()
@@ -82,5 +93,5 @@ class TempInstance():
             raise
 
     def __exit__(self, type, value, traceback):
-        print(f'Terminating instance {self.name}...')
+        print(f'Terminating instance {self.instance.instance_id}...')
         self.instance.terminate()
