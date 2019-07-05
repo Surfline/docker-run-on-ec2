@@ -1,10 +1,13 @@
 from io import StringIO
+import logging
 from time import sleep
 from timeit import default_timer
 
 from fabric import Connection
 from paramiko import RSAKey
 from paramiko.ssh_exception import NoValidConnectionsError
+
+logger = logging.getLogger('run-on-ec2')
 
 
 class SSH():
@@ -35,12 +38,12 @@ class SSH():
             user=self.user,
             connect_kwargs={'pkey': self.private_key},
         )
-        print(f'Waiting for SSH to become available on {self.host}...')
+        logger.info(f'Waiting for SSH to become available on {self.host}...')
         self.wait_for_ssh(default_timer())
         return self.connection
 
     def __exit__(self, type, value, traceback):
-        print(f'Closing SSH connection to {self.host}...')
+        logger.info(f'Closing SSH connection to {self.host}...')
         self.connection.close()
 
     def wait_for_ssh(self, start):

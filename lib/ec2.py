@@ -1,9 +1,12 @@
+import logging
 import sys
 
 import boto3
 
 EC2_CLIENT = boto3.client('ec2')
 EC2_RESOURCE = boto3.resource('ec2')
+
+logger = logging.getLogger('run-on-ec2')
 
 
 class TempKeyPair:
@@ -22,13 +25,13 @@ class TempKeyPair:
         self.key_name = key_name
 
     def __enter__(self):
-        print(f'Creating key pair {self.key_name}...')
+        logger.info(f'Creating key pair {self.key_name}...')
         key_pair = EC2_CLIENT.create_key_pair(KeyName=self.key_name)
         pem = key_pair['KeyMaterial']
         return pem
 
     def __exit__(self, type, value, traceback):
-        print(f'Deleting key pair {self.key_name}...')
+        logger.info(f'Deleting key pair {self.key_name}...')
         EC2_CLIENT.delete_key_pair(KeyName=self.key_name)
 
 
@@ -63,7 +66,7 @@ class TempInstance():
         self.subnet_id = subnet_id
 
     def __enter__(self):
-        print(f'Launching instance {self.name}...')
+        logger.info(f'Launching instance {self.name}...')
         self.instance = EC2_RESOURCE.create_instances(
             LaunchTemplate={'LaunchTemplateName': self.launch_template_name},
             KeyName=self.key_name,
@@ -82,8 +85,8 @@ class TempInstance():
                 },
             ],
         )[0]
-        print(f'Waiting for instance {self.instance.instance_id} to be '
-              'ready...')
+        logger.info(f'Waiting for instance {self.instance.instance_id} to be '
+                    'ready...')
 
         try:
             self.instance.wait_until_running()
@@ -93,5 +96,5 @@ class TempInstance():
             raise
 
     def __exit__(self, type, value, traceback):
-        print(f'Terminating instance {self.instance.instance_id}...')
+        logger.info(f'Terminating instance {self.instance.instance_id}...')
         self.instance.terminate()
