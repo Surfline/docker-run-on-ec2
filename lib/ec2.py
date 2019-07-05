@@ -17,8 +17,8 @@ class TempKeyPair:
 
     On exit the Key Pair is deleted.
 
-    :param key_name: Name of Key Pair to create.
-    :type key_name: str
+    Arguments:
+        key_name: Name of Key Pair to create.
     """
 
     def __init__(self, key_name: str):
@@ -44,13 +44,11 @@ class TempInstance():
 
     On exit the Instance is terminated.
 
-    :param name: Name to tag Instance with.
-    :type name: str
-    :param launch_template_name: Name of launch template to launch Instance
-        with.
-    :type launch_template_name: str
-    :param subnet_id: ID for subnet to launch Instance in.
-    :type subnet_id: str
+    Arguments:
+        name: Name to tag Instance with.
+        launch_template_name: Name of launch template to launch Instance with.
+        key_name: Name of Key Pair to associate Instance with.
+        subnet_id: ID for subnet to launch Instance in.
     """
 
     def __init__(
