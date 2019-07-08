@@ -19,15 +19,13 @@ class SSH():
 
     On exit the connection is closed.
 
-    :param host: Host to connect to.
-    :type host: str
-    :param user: User to connect with.
-    :type user: str
-    :param private_key: RSA private key.
-    :type private: str
+    Arguments:
+        host: Host to connect to.
+        user: User to connect with.
+        private_key: RSA private key.
     """
 
-    def __init__(self, host: str, user: str, private_key):
+    def __init__(self, host: str, user: str, private_key: RSAKey):
         self.host = host
         self.user = user
         self.private_key = RSAKey.from_private_key(StringIO(private_key))
