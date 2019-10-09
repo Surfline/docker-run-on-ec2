@@ -1,5 +1,6 @@
 import logging
 import sys
+from typing import List
 
 import boto3
 from botocore.exceptions import ClientError
@@ -68,42 +69,44 @@ class TempInstance():
         if index == len(self.launch_template_names):
             raise Exception('No instance can be launched.')
 
-        logger.info(f'Launching instance {self.name}...')
-        self.instance = EC2_RESOURCE.create_instances(
-            LaunchTemplate={'LaunchTemplateName': self.launch_template_names[index]},
-            KeyName=self.key_name,
-            MinCount=1,
-            MaxCount=1,
-            SubnetId=self.subnet_id,
-            TagSpecifications=[
-                {
-                    'ResourceType': 'instance',
-                    'Tags': [
-                        {
-                            'Key': 'Name',
-                            'Value': self.name,
-                        },
-                    ],
-                },
-            ],
-        )[0]
-        logger.info(f'Waiting for instance {self.instance.instance_id} to be '
-                    'ready...')
-
         try:
+            logger.info(f'Launching instance {self.name} using template: {self.launch_template_names[index]}')
+            self.instance = EC2_RESOURCE.create_instances(
+                LaunchTemplate={'LaunchTemplateName': self.launch_template_names[index]},
+                KeyName=self.key_name,
+                MinCount=1,
+                MaxCount=1,
+                SubnetId=self.subnet_id,
+                TagSpecifications=[
+                    {
+                        'ResourceType': 'instance',
+                        'Tags': [
+                            {
+                                'Key': 'Name',
+                                'Value': self.name,
+                            },
+                        ],
+                    },
+                ],
+            )[0]
+            logger.info(f'Waiting for instance {self.instance.instance_id} to be '
+                        'ready...')
+          
             self.instance.wait_until_running()
             return self.instance
-        except BaseException:
-            self.__exit__(*sys.exc_info())
-            raise
         except ClientError as e:
-            if e.response['Error']['Code'] == 'InsufficientInstanceCapacity':
-                self.__launch_instance(index+=1)
+            error_code = e.response['Error']['Code']
+            if error_code == 'InsufficientInstanceCapacity' or error_code == 'SpotMaxPriceTooLow':
+                logger.error(f'The use of launch template: {self.launch_template_names[index]} failed.')
+                return self.__launch_instance(index+1)
             else:
-                raise Exception(f'An error has occurred: {str(e)}')
+                raise
 
     def __enter__(self):
-        self.__launch_instance()
+        try:
+            return self.__launch_instance()
+        finally:
+            self.__exit__(*sys.exc_info())
 
     def __exit__(self, type, value, traceback):
         logger.info(f'Terminating instance {self.instance.instance_id}...')
