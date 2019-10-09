@@ -11,7 +11,12 @@ Docker image creates a Key Pair and initializes an EC2 instance both with the `N
 These variables can be [passed into the Docker run](https://docs.docker.com/engine/reference/commandline/run/#set-environment-variables--e---env---env-file) using the `-e` or `--env-file` flags:
 
 - `NAME` - Used to name EC2 Key Pair and Instance. UUID is appended to the end.
-- `LAUNCH_TEMPLATE_NAMES` - A comma separated list of launch templates to be used to create EC2 instances (Ex: `launch-template-1, launch-template-2`). The launch templates will be used in the order they are passed in. If creating an EC2 instance with a launch template fails, then the next launch template given in the list will be used. If creating an EC2 instance with every launch templates fails, then the program will exit.
+- `LAUNCH_TEMPLATE_NAMES` - A comma separated list of launch templates to be used to
+create EC2 instances. The launch templates will be used in the order they are passed in.
+If creating an EC2 instance with a launch template fails, then the next launch template given
+in the list will be used. If creating an EC2 instance with every launch templates fails,
+then the program will exit.
+Example: `launch-template-1,launch-template-2`
 - `SUBNET_ID` - ID for subnet to launch EC2 Instance in.
 - `AWS_DEFAULT_REGION` - AWS region to launch EC2 Instance in.
 - `AWS_ACCESS_KEY_ID` - AWS access key ID used to create EC2 Key Pair and Instance.
