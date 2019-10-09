@@ -64,6 +64,7 @@ class TempInstance():
         self.launch_template_names = launch_template_names
         self.key_name = key_name
         self.subnet_id = subnet_id
+        self.instance = None
 
     def __launch_instance(self, index: int = 0):
         if index == len(self.launch_template_names):
@@ -89,11 +90,6 @@ class TempInstance():
                     },
                 ],
             )[0]
-            logger.info(f'Waiting for instance {self.instance.instance_id} to be '
-                        'ready...')
-          
-            self.instance.wait_until_running()
-            return self.instance
         except ClientError as e:
             error_code = e.response['Error']['Code']
             if error_code == 'InsufficientInstanceCapacity' or error_code == 'SpotMaxPriceTooLow':
@@ -102,6 +98,11 @@ class TempInstance():
             else:
                 raise
 
+        logger.info(f'Waiting for instance {self.instance.instance_id} to be ready...')
+    
+        self.instance.wait_until_running()
+        return self.instance
+
     def __enter__(self):
         try:
             return self.__launch_instance()
@@ -109,5 +110,6 @@ class TempInstance():
             self.__exit__(*sys.exc_info())
 
     def __exit__(self, type, value, traceback):
-        logger.info(f'Terminating instance {self.instance.instance_id}...')
-        self.instance.terminate()
+        if self.instance:
+            logger.info(f'Terminating instance {self.instance.instance_id}...')
+            self.instance.terminate()
