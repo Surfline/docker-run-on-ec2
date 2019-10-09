@@ -55,7 +55,7 @@ class TempInstance():
     def __init__(
         self,
         name: str,
-        launch_template_name: List[str],
+        launch_template_names: List[str],
         key_name: str,
         subnet_id: str,
     ):
