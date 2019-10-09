@@ -39,7 +39,11 @@ class TempKeyPair:
 
 class TempInstance():
     """
-    Create a temporary EC2 Instance from a launch template.
+    Create a temporary EC2 Instance from a list of launch templates.
+    If creating an EC2 instance with a launch template fails,
+    then the next launch template given in the list will be used.
+    If creating an EC2 instance with every launch templates fails,
+    then the program will exit.
 
     On enter an Instance is created and tagged with a name. The Instance is
     returned after it is successfully running.
@@ -48,7 +52,10 @@ class TempInstance():
 
     Arguments:
         name: Name to tag Instance with.
-        launch_template_name: Name of launch template to launch Instance with.
+        launch_template_names: A list of launch templates to be
+                               used to create EC2 instances.
+                               The launch templates will be used
+                               in the order they are passed in.
         key_name: Name of Key Pair to associate Instance with.
         subnet_id: ID for subnet to launch Instance in.
     """
