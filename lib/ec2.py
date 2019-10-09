@@ -2,6 +2,7 @@ import logging
 import sys
 
 import boto3
+from botocore.exceptions import ClientError
 
 EC2_CLIENT = boto3.client('ec2')
 EC2_RESOURCE = boto3.resource('ec2')
@@ -54,19 +55,22 @@ class TempInstance():
     def __init__(
         self,
         name: str,
-        launch_template_name: str,
+        launch_template_name: List[str],
         key_name: str,
         subnet_id: str,
     ):
         self.name = name
-        self.launch_template_name = launch_template_name
+        self.launch_template_names = launch_template_names
         self.key_name = key_name
         self.subnet_id = subnet_id
 
-    def __enter__(self):
+    def __launch_instance(self, index: int = 0):
+        if index == len(self.launch_template_names):
+            raise Exception('No instance can be launched.')
+
         logger.info(f'Launching instance {self.name}...')
         self.instance = EC2_RESOURCE.create_instances(
-            LaunchTemplate={'LaunchTemplateName': self.launch_template_name},
+            LaunchTemplate={'LaunchTemplateName': self.launch_template_names[index]},
             KeyName=self.key_name,
             MinCount=1,
             MaxCount=1,
@@ -92,6 +96,14 @@ class TempInstance():
         except BaseException:
             self.__exit__(*sys.exc_info())
             raise
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'InsufficientInstanceCapacity':
+                self.__launch_instance(index+=1)
+            else:
+                raise Exception(f'An error has occurred: {str(e)}')
+
+    def __enter__(self):
+        self.__launch_instance()
 
     def __exit__(self, type, value, traceback):
         logger.info(f'Terminating instance {self.instance.instance_id}...')

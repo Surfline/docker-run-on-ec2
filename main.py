@@ -16,7 +16,7 @@ def main():
 
     name = os.environ['NAME']
     key_name = f'{name}-{uuid4()}'
-    launch_template_name = os.environ['LAUNCH_TEMPLATE_NAME']
+    launch_template_names = os.environ['LAUNCH_TEMPLATE_NAMES'].split()
     subnet_id = os.environ['SUBNET_ID']
     command = ' '.join(sys.argv[1:])
 
@@ -24,7 +24,7 @@ def main():
         private_key = stack.enter_context(TempKeyPair(key_name))
         instance = stack.enter_context(TempInstance(
             name,
-            launch_template_name,
+            launch_template_names,
             key_name,
             subnet_id,
         ))
