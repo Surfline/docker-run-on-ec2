@@ -113,7 +113,7 @@ class TempInstance():
     def __enter__(self):
         try:
             return self.__launch_instance()
-        finally:
+        except:
             self.__exit__(*sys.exc_info())
 
     def __exit__(self, type, value, traceback):
